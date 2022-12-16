@@ -1,0 +1,18 @@
+MAINTAINER "Chris Mulder" <cmulder@bitbuild.io>
+FROM quay.io/centos/centos:stream9
+
+RUN dnf -y update && \
+  dnf -y install epel-release systemd && \
+  dnf clean all 
+
+# Minimize the systemd setup
+RUN find /etc/systemd/system /usr/lib/systemd/system/{basic,multi-user,sysinit}.target.wants -type l \! -lname /dev/null | xargs rm -v
+RUN systemctl mask systemd-logind.service && \
+  mv /usr/lib/systemd/system/systemd-logind.service /usr/lib/systemd/system/systemd-logind.service-disable-dbus
+
+RUN ln -s /usr/lib/systemd/system/dbus-broker.service /usr/lib/systemd/system/dbus.service
+RUN mkdir /var/log/journal
+RUN systemd-tmpfiles --remove --create
+
+CMD [ "/sbin/init" ]
+STOPSIGNAL RTMIN+3

@@ -1,0 +1,20 @@
+MAINTAINER "Chris Mulder" <cmulder@bitbuild.io>
+FROM quay.io/rh_ee_cmulder/centos-9-init
+
+# Install required packages for boot server
+
+RUN dnf -y install httpd dhcp-server
+
+# Configure webserver
+VOLUME /var/www/html
+RUN echo "Successful Web Server Test" > /var/www/html/index.html 
+RUN mkdir /etc/systemd/system/httpd.service.d/; \
+  echo -e '[Service]\nRestart=always' > /etc/systemd/system/httpd.service.d/httpd.conf 
+RUN systemctl enable httpd
+
+EXPOSE 67/tcp
+EXPOSE 67/udp
+EXPOSE 80/tcp 
+
+CMD [ "/sbin/init" ]
+STOPSIGNAL RTMIN+3
